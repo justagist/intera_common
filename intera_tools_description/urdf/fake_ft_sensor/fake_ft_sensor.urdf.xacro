@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="right_ft_sensor">
+  <xacro:include filename="$(find intera_tools_description)/urdf/fake_ft_sensor/fake_ft_sensor.xacro" />
+  <xacro:fake_ft_sensor side="right"
+                        use_connector_plate="true"/>
+</robot>

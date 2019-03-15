@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="fake_ft_sensor">
+  <xacro:macro name="fake_ft_sensor" params="side use_connector_plate gazebo">
+    <!-- This is not a URDF, it is a URDF fragment describing a default end effector
+       to be added to the robot URDF at run time.
+    -->
+     <!-- Base of whole end effector - (Connector Plate + Electric Gripper + Fingers + Tips) -->
+    <link name="${side}_ft_sensor_base">
+      <inertial>
+        <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+        <mass value="0.3"/>
+        <inertia ixx="1.0" ixy="0" ixz="0" iyy="1.0" iyz="0" izz="1.0"/>
+      </inertial>
+    </link>
+    <link name="${side}_ft_sensor_plate">
+      <inertial>
+        <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+        <mass value="2e-06"/>
+        <inertia ixx="1.1e-09" ixy="0" ixz="0" iyy="1.1e-09" iyz="0" izz="1.1e-09"/>
+      </inertial>
+      <visual>
+        <geometry>
+          <cylinder length="0.04" radius="0.0300"/>
+        </geometry>
+        <material name="blue">
+          <color rgba="0 0 .8 1"/>
+        </material>
+      </visual>
+      <collision>
+        <geometry>
+          <cylinder length="0.04" radius="0.0300"/>
+        </geometry>
+      </collision>
+    </link>
+
+     <xacro:unless value="${use_connector_plate}">
+       <xacro:property name="sensor_parent_link" value="${side}_ft_sensor_base" scope="local"/>
+       <xacro:property name="connector_plate_length" value="0.0" scope="local"/>
+     </xacro:unless>
+     <xacro:if value="${use_connector_plate}">
+       <!-- Connector Plate Joint -->
+       <joint name="${side}_connector_plate_base_joint" type="fixed">
+         <origin xyz="0 0 0.0018" rpy="0 0 0" />
+         <parent link="${side}_ft_sensor_base"  />
+         <child  link="${side}_connector_plate_base" />
+       </joint>
+       <!-- Connector Plate Link -->
+       <xacro:include filename="$(find intera_tools_description)/urdf/connector_plate/connector_plate.xacro" />
+       <xacro:rethink_connector_plate side="${side}" gazebo="${gazebo}"/>
+       <xacro:property name="sensor_parent_link" value="${side}_connector_plate_mount" scope="local"/>
+       <xacro:property name="connector_plate_length" value="${rethink_connector_plate_length}" scope="local"/>
+     </xacro:if>
+
+    <joint name="${side}_ft_sensor_joint" type="revolute">
+      <origin rpy="0 0 0" xyz="0 0 0.035"/>
+      <parent link="${sensor_parent_link}"/>
+      <child link="${side}_ft_sensor_plate"/>
+      <limit velocity="6.5" effort="1000" lower="0.01" upper="0" />
+    </joint>
+
+
+
+
+    <joint name="${side}_ft_sensor_base" type="fixed">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <parent link="${side}_hand"/>
+      <child link="${side}_ft_sensor_base"/>
+    </joint>
+
+    <xacro:if value="${gazebo}">
+      <xacro:include filename="$(find intera_tools_description)/urdf/fake_ft_sensor/ft_sensor.gazebo.xacro" />
+      <xacro:ft_sensor_gazebo name="${side}"/>
+    </xacro:if>
+
+  </xacro:macro>
+</robot>
